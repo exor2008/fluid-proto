@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "fluid-proto"
+version = "0.1.0"
+description = ""
+authors = ["Ian <exor2008@yandex.ru>"]
+readme = "README.md"
+packages = [{ include = "fluid_proto" }]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.13"
+vispy = "^0.14.1"
+pyqt6 = "^6.6.0"
+scipy = "^1.11.3"
+matplotlib = "^3.8.1"
+numba = "^0.58.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
