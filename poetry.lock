@@ -730,4 +730,4 @@ wx = ["wxPython"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "3b0ee16c55892e914085e3f5837ac970e9f2011a420d3e0018bb0463ac988f26"
+content-hash = "2402bf621ec38be84463f17db964b2e094bdeb4c5cc5652634f962c644feeab2"

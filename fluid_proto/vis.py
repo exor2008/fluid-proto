@@ -17,8 +17,9 @@ class Canvas(app.Canvas):
             fluid.data_to_draw,
             # np.random.random(size=(100, 100)),
             cmap="coolwarm",
-            clim=(-1, 1),
+            clim=(0, 1),
         )
+        self.time = 0
 
         self.image.transform = transforms.STTransform(scale=(1, 1, 1))
         self._timer = app.Timer(TIME_STEP, connect=self.on_timer, start=True)
@@ -48,7 +49,9 @@ class Canvas(app.Canvas):
         self.image.draw()
 
     def on_timer(self, event):
+        # if self.time > 5:
         self.fluid.step(event.dt)
         self.image.set_data(self.fluid.data_to_draw)
         # self.image.set_data(np.random.random(size=(100, 100)))
         self.update()
+        self.time += event.dt

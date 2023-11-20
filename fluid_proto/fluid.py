@@ -5,8 +5,10 @@ import numba as nb
 import numpy as np
 from matplotlib import pyplot as plt
 
+from fluid_proto.tools import arr_from_img
+
 GRAVITY = -9.81
-NUM_ITERS = 20
+NUM_ITERS = 40
 DENSITY = 1000.0
 
 U_FEILD = 0
@@ -22,22 +24,23 @@ class Fluid:
         self.h = 1 / 100
 
         self.pressure = np.zeros(shape=(self.size), dtype=np.float32)
-        self.smoke = np.ones(shape=(self.size), dtype=np.float32)
+        self.matter = np.ones(shape=(self.size), dtype=np.float32)
         self.u = np.zeros(shape=(self.size), dtype=np.float32)
         self.v = np.zeros(shape=(self.size), dtype=np.float32)
-        self.mass = np.ones(shape=(self.size), dtype=np.float32)
+        self.smoke = np.ones(shape=(self.size), dtype=np.float32)
         self.obstacle_x = 0.0
         self.obstacle_y = 0.0
 
-        self.smoke = self.smoke.reshape([self.size_x, self.size_y])
-        self.smoke[0, :] = 0
-        self.smoke[:, 0] = 0
-        self.smoke[:, size_y - 1] = 0
-        self.smoke = self.smoke.ravel().astype(np.float32)
+        self.matter = self.matter.reshape([self.size_x, self.size_y])
+        self.matter[0, :] = 0
+        self.matter[:, 0] = 0
+        self.matter[:, size_y - 1] = 0
+        self.matter = self.matter.ravel().astype(np.float32)
 
-        self.mass = self.mass.reshape([self.size_x, self.size_y])
-        self.mass[0, 25:55] = 0.0
-        self.mass = self.mass.ravel().astype(np.float32)
+        # self.mass = self.mass.reshape([self.size_x, self.size_y])
+        # self.mass[0, 25:55] = 0.0
+        # self.mass = self.mass.ravel().astype(np.float32)
+        self.smoke = arr_from_img(r"fluid_proto/tmpl.png")
 
         self.u = self.u.reshape([self.size_x, self.size_y])
         self.u[1, :] = 2.0
@@ -45,22 +48,40 @@ class Fluid:
 
         self.frame = 0
 
-        self.set_obstacle(0.8, 0.5, True)
+        # self.set_obstacle(0.8, 0.5, True)
+        self.set_obstacle_square(150, 0, 155, 40)
+        self.set_obstacle_square(150, 48, 155, 52)
+        self.set_obstacle_square(150, 60, 155, 100)
+        self.set_obstacle_square(300, 30, 400, 60)
+        self.set_obstacle_square(350, 0, 370, 20)
 
     def step(self, dt: float):
         # print(dt)
 
-        if self.frame == 200:
-            self.mass = self.mass.reshape([self.size_x, self.size_y])
-            self.mass[0, 25:55] = 1.0
-            self.mass = self.mass.ravel().astype(np.float32)
+        if self.frame == 50:
+            self.smoke = self.smoke.reshape([self.size_x, self.size_y])
+            self.smoke[0, 25:75] = 0.0
+            self.smoke = self.smoke.ravel().astype(np.float32)
+
+        if self.frame == 100:
+            self.smoke = self.smoke.reshape([self.size_x, self.size_y])
+            self.smoke[0, 25:75] = 1.0
+            self.smoke = self.smoke.ravel().astype(np.float32)
+            # self.u = self.u.reshape([self.size_x, self.size_y])
+            # self.u[1, :] = 3.0
+            # self.u = self.u.ravel().astype(np.float32)
+
+        # if self.frame == 120:
+        #     self.u = self.u.reshape([self.size_x, self.size_y])
+        #     self.u[1, :] = 0.0
+        #     self.u = self.u.ravel().astype(np.float32)
 
         dt = 0.01
         # gravity(self.smoke, self.v, dt, GRAVITY, self.x, self.y)
         self.pressure = np.zeros_like(self.pressure, dtype=np.float32)
 
         projection(
-            self.smoke,
+            self.matter,
             self.u,
             self.v,
             self.pressure,
@@ -70,7 +91,7 @@ class Fluid:
             self.x,
             self.y,
         )
-
+        # print("0", self.pressure.max(), self.pressure.mean(), self.pressure.min())
         self.extrapolate()
 
         advect_vel(
@@ -78,8 +99,8 @@ class Fluid:
             self.v,
             self.u.copy(),
             self.v.copy(),
+            self.matter,
             self.smoke,
-            self.mass,
             dt,
             self.h,
             self.x,
@@ -87,9 +108,9 @@ class Fluid:
         )
 
         advect_smoke(
+            self.matter,
             self.smoke,
-            self.mass,
-            self.mass.copy(),
+            self.smoke.copy(),
             self.u,
             self.v,
             dt,
@@ -97,7 +118,6 @@ class Fluid:
             self.x,
             self.y,
         )
-
         self.frame += 1
 
     def set_obstacle(self, x, y, reset):
@@ -113,18 +133,28 @@ class Fluid:
 
         for i in range(1, self.x - 2):
             for j in range(1, self.y - 2):
-                self.smoke[i * self.y + j] = 1
+                self.matter[i * self.y + j] = 1
 
                 dx = (i + 0.5) * self.h - x
                 dy = (j + 0.5) * self.h - y
 
                 if dx * dx + dy * dy < r * r:
-                    self.smoke[i * self.y + j] = 0
-                    self.mass[i * self.y + j] = 1
+                    self.matter[i * self.y + j] = 0
+                    self.smoke[i * self.y + j] = 1
                     self.u[i * self.y + j] = vx
                     self.u[(i + 1) * self.y + j] = vx
                     self.v[i * self.y + j] = vy
                     self.u[i * self.y + (j + 1)] = vy
+
+    def set_obstacle_square(self, x1, y1, x2, y2):
+        for i in range(x1, x2):
+            for j in range(y1, y2):
+                self.matter[i * self.y + j] = 0
+                self.smoke[i * self.y + j] = 1
+                self.u[i * self.y + j] = 0.0
+                self.u[(i + 1) * self.y + j] = 0.0
+                self.v[i * self.y + j] = 0.0
+                self.u[i * self.y + (j + 1)] = 0.0
 
     def extrapolate(self):
         self.u = self.u.reshape([self.x, self.y])
@@ -150,7 +180,7 @@ class Fluid:
     @property
     def data_to_draw(self):
         # print(self.u.max(), self.v.min())
-        return np.rot90(self.mass.reshape([self.x, self.y]))
+        return np.rot90(self.smoke.reshape([self.x, self.y]))
 
 
 @nb.njit((nb.float32[:], nb.float32[:], nb.float32, nb.float32, nb.int32, nb.int32))
@@ -182,7 +212,7 @@ def gravity(
     )
 )
 def projection(
-    smoke: np.ndarray,
+    matter: np.ndarray,
     u: np.ndarray,
     v: np.ndarray,
     pressure: np.ndarray,
@@ -198,13 +228,13 @@ def projection(
     for _ in range(num_iters):
         for x in range(1, x_size - 1):
             for y in range(1, y_size - 1):
-                if smoke[x * y_size + y] == 0.0:
+                if matter[x * y_size + y] == 0.0:
                     continue
 
-                sx0 = smoke[(x - 1) * y_size + y]
-                sx1 = smoke[(x + 1) * y_size + y]
-                sy0 = smoke[x * y_size + (y - 1)]
-                sy1 = smoke[x * y_size + (y + 1)]
+                sx0 = matter[(x - 1) * y_size + y]
+                sx1 = matter[(x + 1) * y_size + y]
+                sy0 = matter[x * y_size + (y - 1)]
+                sy1 = matter[x * y_size + (y + 1)]
 
                 s = sum([sx0, sx1, sy0, sy1])
 
@@ -220,7 +250,7 @@ def projection(
 
                 pressure_scalar = -div / s
                 pressure_scalar *= 1.9
-                pressure[x * y_size + y] += cp * pressure_scalar
+                # pressure[x * y_size + y] += cp * pressure_scalar
 
                 u[x * y_size + y] -= sx0 * pressure_scalar
                 u[(x + 1) * y_size + y] += sx1 * pressure_scalar
