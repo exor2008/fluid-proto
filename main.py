@@ -1,10 +1,20 @@
 import sys
 
-from fluid_proto.fluid import Fluid
+from matplotlib import pyplot as plt
+
+from fluid_proto.fluid_parallel import Fluid
 from fluid_proto.vis import Canvas
 
+# from fluid_proto.fluid import Fluid
+
+
 if __name__ == "__main__":
-    f = Fluid(500, 102)
+    f = Fluid(100, 200)
+    # while True:
+    #     f.step(0.01)
+    # plt.imshow(f.pressure)
+    # plt.show()
+
     win = Canvas(f)
     win.show()
     if sys.flags.interactive != 1:

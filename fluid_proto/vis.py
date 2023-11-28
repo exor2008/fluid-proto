@@ -17,7 +17,7 @@ class Canvas(app.Canvas):
             fluid.data_to_draw,
             # np.random.random(size=(100, 100)),
             cmap="coolwarm",
-            clim=(0, 1),
+            clim=(-1, 1),
         )
         self.time = 0
 
