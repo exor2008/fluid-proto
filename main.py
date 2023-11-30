@@ -9,7 +9,7 @@ from fluid_proto.vis import Canvas
 
 
 if __name__ == "__main__":
-    f = Fluid(100, 200)
+    f = Fluid(100, 100)
     # while True:
     #     f.step(0.01)
     # plt.imshow(f.pressure)
