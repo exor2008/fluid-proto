@@ -114,23 +114,16 @@ class Fluid:
             sum_pressure = convolve2d(pressure, NEIGHBORS, mode="same", boundary="fill")
             pressure = (sum_pressure - div) / 4
 
+            pressure[0, :] = 0.0
+            pressure[-1, :] = 0.0
+            pressure[:, 0] = 0.0
+            pressure[:, -1] = 0.0
+            pressure[40:50, 40:60] = 0
+
         self.pressure = pressure  # * 1.9
 
         self.u -= np.gradient(pressure, axis=0)
         self.v -= np.gradient(pressure, axis=1)
-
-        self.u[0, :] = 0.0
-        self.u[-1, :] = 0.0
-        self.u[:, 0] = 0.0
-        self.u[:, -1] = 0.0
-
-        self.v[0, :] = 0.0
-        self.v[-1, :] = 0.0
-        self.v[:, 0] = 0.0
-        self.v[:, -1] = 0.0
-
-        self.u[40:50, 40:60] = 0
-        self.v[40:50, 40:60] = 0
 
     def diffusion(self, dt: float):
         for _ in range(NUM_ITERS):
